@@ -1,0 +1,256 @@
+\documentclass[a4paper,12pt]{article}
+
+% ======================
+% Encodage / langue
+% ======================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+
+% ======================
+% Mise en page / style
+% ======================
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{titlesec}
+\usepackage{tocloft}
+\usepackage{setspace}
+\usepackage{float}
+\usepackage{placeins}
+\usepackage{xurl}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{booktabs}
+
+% ======================
+% Couleurs
+% ======================
+\definecolor{ensiared}{RGB}{156,31,46}
+\definecolor{tocblue}{RGB}{0,102,204}
+
+% ======================
+% ToC en bleu
+% ======================
+\renewcommand{\cftsecfont}{\color{tocblue}}
+\renewcommand{\cftsubsecfont}{\color{tocblue}}
+\renewcommand{\cftsecpagefont}{\color{tocblue}}
+\renewcommand{\cftsubsecpagefont}{\color{tocblue}}
+
+% ======================
+% Interligne / spacing
+% ======================
+\linespread{1.15}
+\titlespacing*{\section}{0pt}{*2}{*1.2}
+\titlespacing*{\subsection}{0pt}{*1.5}{*1}
+
+% ======================
+% Encadré robuste
+% ======================
+\usepackage[most]{tcolorbox}
+\newtcolorbox{tipbox}{
+  colback=black!3,
+  colframe=black!25,
+  boxrule=0.6pt,
+  arc=2pt,
+  left=6pt,right=6pt,top=6pt,bottom=6pt
+}
+
+\pagestyle{empty}
+
+\begin{document}
+
+% ==========================================================
+% Page de garde
+% ==========================================================
+\pagenumbering{gobble}
+
+\begin{titlepage}
+  \begin{tikzpicture}[remember picture, overlay]
+    \fill[ensiared] ([yshift=2cm]current page.south west) rectangle (current page.south east);
+    \fill[ensiared] ([yshift=2cm]current page.north west) rectangle (current page.north east);
+  \end{tikzpicture}
+
+  \centering
+  \vspace*{2cm}
+
+  % Logos
+  \includegraphics[width=0.35\textwidth]{img/sd logo.jpg}\hfill
+  \includegraphics[width=0.25\textwidth]{img/uca logo.png}\hfill
+
+  \vspace*{1.0cm}
+
+  {\color{white}\scshape\LARGE Base de données \& Systèmes décisionnels\par}
+  \vspace{0.4cm}
+  {\scshape\Large UNIVERSITÉ CLERMONT AUVERGNE — Campus Aurillac\par}
+
+  \vspace{1.2cm}
+  \hrule height 1pt
+  \vspace{0.5cm}
+  {\huge\bfseries Fiche technique — Outil décisionnel Ventes \& Logistique\par}
+  \vspace{0.2cm}
+  {\Large PostgreSQL + Datawarehouse + Power BI \;|\; SAE 6.VCOD.01\par}
+  \vspace{0.5cm}
+  \hrule height 1pt
+  \vspace{1.6cm}
+
+  \begin{minipage}[t]{0.5\textwidth}
+    \raggedright
+    {\Large\textbf{Réalisé par} :\par}
+    \vspace{0.2cm}
+    \begin{tabular}{l}
+      Ibrahima BODIAN \\
+    \end{tabular}
+  \end{minipage}%
+  \begin{minipage}[t]{0.5\textwidth}
+    \raggedleft
+    {\Large\textbf{Encadrant} :\par}
+    \vspace{0.2cm}
+    \textit{Bruno LAGARDE} \\
+  \end{minipage}
+
+  \vfill
+  {\large Date : \textit{\today}\par}
+\end{titlepage}
+
+% ==========================================================
+% Sommaire
+% ==========================================================
+\renewcommand{\contentsname}{Sommaire}
+\tableofcontents
+\newpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+% ==========================================================
+% Corps
+% ==========================================================
+
+\section*{1) Objectif technique}
+\addcontentsline{toc}{section}{1) Objectif technique}
+Mettre en place une chaîne décisionnelle complète :
+\begin{itemize}
+  \item import des données opérationnelles (OLTP) dans PostgreSQL (\texttt{ventebdd}, schéma \texttt{entreprise}) ;
+  \item construction d’un datawarehouse en schéma en étoile (\texttt{entreprise\_dw}) ;
+  \item alimentation du DW depuis l’OLTP via scripts SQL (\texttt{INSERT...SELECT}) ;
+  \item restitution dans Power BI (Import, modèle en étoile, rapports Finance \textbf{F} et Logistique \textbf{L}).
+\end{itemize}
+
+\begin{tipbox}
+\textbf{Remarque :} le guide utilisateur (1 page) décrit l’usage Power BI. Cette fiche décrit l’architecture, le modèle, le chargement et les contrôles.
+\end{tipbox}
+
+\section*{2) Environnement \& composants}
+\addcontentsline{toc}{section}{2) Environnement \& composants}
+\begin{itemize}
+  \item \textbf{SGBD :} PostgreSQL (base \texttt{ventebdd})
+  \item \textbf{Schémas :} \texttt{entreprise} (OLTP), \texttt{entreprise\_dw} (DW)
+  \item \textbf{Sources :} fichiers CSV importés dans l’OLTP
+  \item \textbf{BI :} Power BI Desktop (\textbf{Import})
+\end{itemize}
+
+\section*{3) Modèle source (OLTP) — schéma \texttt{entreprise}}
+\addcontentsline{toc}{section}{3) Modèle source (OLTP) — schéma \texttt{entreprise}}
+\textbf{Tables principales :} \texttt{\_client}, \texttt{\_commande}, \texttt{\_detailcommande}, \texttt{\_produit}, \texttt{\_categorie}, \texttt{\_fournisseur}, \texttt{\_employe}, \texttt{\_transporteur}.
+
+\textbf{Relations clés :}
+\begin{itemize}
+  \item client $\rightarrow$ commande (1,n) ; commande $\rightarrow$ détailcommande (1,n) ;
+  \item produit $\rightarrow$ détailcommande (1,n) ; catégorie $\rightarrow$ produit (1,n) ;
+  \item fournisseur $\rightarrow$ produit (1,n) ; employé $\rightarrow$ commande (1,n) ;
+  \item transporteur $\rightarrow$ commande (1,n).
+\end{itemize}
+
+\section*{4) Datawarehouse (DW) — schéma \texttt{entreprise\_dw}}
+\addcontentsline{toc}{section}{4) Datawarehouse (DW) — schéma \texttt{entreprise\_dw}}
+\textbf{Dimensions :}
+\begin{itemize}
+  \item \texttt{dimTemps} (date\_key, date\_jour), \texttt{dimClient}, \texttt{dimEmploye},
+  \texttt{dimTransporteur}, \texttt{dimGeoLivraison}, \texttt{dimProduit} (dénormalisée : produit + catégorie + fournisseur).
+\end{itemize}
+
+\textbf{Faits :}
+\begin{itemize}
+  \item \texttt{faitVentes} (grain = ligne de commande) : qte, prixunit, remise, montants brut/net, \textit{port alloué}, nocom.
+  \item \texttt{faitLivraisons} (grain = commande) : port, délais, écarts objectif/envoi, dates (com/envoi/objectif), nocom.
+\end{itemize}
+
+\section*{5) Règles de calcul (principes)}
+\addcontentsline{toc}{section}{5) Règles de calcul (principes)}
+\textbf{Ventes :}
+\begin{itemize}
+  \item Montant brut = \texttt{qte} $\times$ \texttt{prixunit}
+  \item Montant net = \texttt{qte} $\times$ \texttt{prixunit} $\times (1-\texttt{remise})
+\end{itemize}
+
+\textbf{Port alloué :} le port (niveau commande) est réparti sur les lignes au prorata du montant net (évite le double comptage).
+
+\textbf{Logistique :}
+\begin{itemize}
+  \item Délai d’envoi (jours) = \texttt{dateenv} $-$ \texttt{datecom}
+  \item Écart objectif/envoi (jours) = \texttt{dateenv} $-$ \texttt{dateobjliv} (peut être négatif)
+\end{itemize}
+
+\section*{6) Alimentation DW (ETL SQL)}
+\addcontentsline{toc}{section}{6) Alimentation DW (ETL SQL)}
+\textbf{Ordre recommandé :}
+\begin{enumerate}
+  \item Dimensions : \texttt{dimTemps}, \texttt{dimClient}, \texttt{dimEmploye}, \texttt{dimTransporteur}, \texttt{dimGeoLivraison}, \texttt{dimProduit}
+  \item Faits : \texttt{faitLivraisons} puis \texttt{faitVentes}
+\end{enumerate}
+
+\textbf{Nettoyage :} remplacement de \texttt{unknown\_value\_please\_contact\_support} par \textbf{NULL} lors du chargement des dimensions.
+
+\section*{7) Contrôles qualité (cohérence)}
+\addcontentsline{toc}{section}{7) Contrôles qualité (cohérence)}
+\textbf{CA net — source vs DW :}
+\begin{verbatim}
+SELECT
+  (SELECT SUM(qte * prixunit * (1 - remise))
+   FROM entreprise._detailcommande) AS ca_oltp,
+  (SELECT SUM(montant_net)
+   FROM entreprise_dw.faitVentes) AS ca_dw;
+\end{verbatim}
+
+\textbf{Nb commandes — source vs DW :}
+\begin{verbatim}
+SELECT
+  (SELECT COUNT(*) FROM entreprise._commande) AS commandes_oltp,
+  (SELECT COUNT(*) FROM entreprise_dw.faitLivraisons) AS commandes_dw;
+\end{verbatim}
+
+\textit{Note :} si le fichier de détails est partiel, on peut avoir plus de commandes que de commandes « avec ventes » (distinct \texttt{nocom} dans \texttt{\_detailcommande}).
+
+\section*{8) Power BI (connexion \& relations)}
+\addcontentsline{toc}{section}{8) Power BI (connexion \& relations)}
+\textbf{Connexion :} import des tables du schéma \texttt{entreprise\_dw}.
+
+\textbf{Relations (étoile) :}
+\begin{itemize}
+  \item \texttt{dimTemps[date\_key]} $\rightarrow$ \texttt{faitVentes[date\_key]}
+  \item \texttt{dimClient} $\rightarrow$ \texttt{faitVentes} ; \texttt{dimEmploye} $\rightarrow$ \texttt{faitVentes} ;
+  \texttt{dimProduit} $\rightarrow$ \texttt{faitVentes} ; \texttt{dimTransporteur} $\rightarrow$ \texttt{faitVentes} ;
+  \texttt{dimGeoLivraison} $\rightarrow$ \texttt{faitVentes}
+\end{itemize}
+
+\textbf{Dates livraison :} relation active recommandée sur \texttt{faitLivraisons[datecom\_key]}. Les dates \texttt{dateenv\_key} et \texttt{dateobj\_key} peuvent être utilisées via mesures DAX si nécessaire.
+
+\section*{9) Procédure de mise à jour (refresh)}
+\addcontentsline{toc}{section}{9) Procédure de mise à jour (refresh)}
+\begin{enumerate}
+  \item Import/maj CSV dans \texttt{entreprise} (si nouvelles données)
+  \item Exécuter le chargement DW (dims puis faits)
+  \item Lancer les contrôles (CA, nb commandes)
+  \item Power BI : \textbf{Actualiser}
+\end{enumerate}
+
+\section*{10) Dépannage rapide}
+\addcontentsline{toc}{section}{10) Dépannage rapide}
+\begin{itemize}
+  \item Erreur FK à l’import : respecter l’ordre parents $\rightarrow$ enfants.
+  \item Nouvelles colonnes DW invisibles : vérifier Power Query (\textit{Colonnes conservées}), puis \textit{Fermer \& appliquer}.
+  \item Courbes temps peu variées : période courte $\rightarrow$ privilégier analyses produit/client/transporteur.
+\end{itemize}
+
+\end{document}

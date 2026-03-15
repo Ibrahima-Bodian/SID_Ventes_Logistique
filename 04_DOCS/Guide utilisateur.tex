@@ -1,0 +1,317 @@
+\documentclass[a4paper,12pt]{article}
+
+% ======================
+% Encodage / langue
+% ======================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+
+% ======================
+% Mise en page / style
+% ======================
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{titlesec}
+\usepackage{tocloft}
+\usepackage{setspace}
+\usepackage{float}
+\usepackage{placeins}
+\usepackage{xurl}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{booktabs}
+
+% ======================
+% Couleurs
+% ======================
+\definecolor{ensiared}{RGB}{156,31,46}
+\definecolor{tocblue}{RGB}{0,102,204}
+
+% ======================
+% ToC en bleu
+% ======================
+\renewcommand{\cftsecfont}{\color{tocblue}}
+\renewcommand{\cftsubsecfont}{\color{tocblue}}
+\renewcommand{\cftsecpagefont}{\color{tocblue}}
+\renewcommand{\cftsubsecpagefont}{\color{tocblue}}
+
+% ======================
+% Interligne / spacing
+% ======================
+\linespread{1.15}
+\titlespacing*{\section}{0pt}{*2}{*1.2}
+\titlespacing*{\subsection}{0pt}{*1.5}{*1}
+
+% ======================
+% Macros
+% ======================
+\newcommand{\todo}{\textit{(À compléter)}}
+
+% Encadré robuste (évite les erreurs tabularx)
+\usepackage[most]{tcolorbox}
+\newtcolorbox{tipbox}{
+  colback=black!3,
+  colframe=black!25,
+  boxrule=0.6pt,
+  arc=2pt,
+  left=6pt,right=6pt,top=6pt,bottom=6pt
+}
+
+% Capture (optionnelle)
+\newcommand{\screenshot}[2][]{%
+  \begin{figure}[H]
+    \centering
+    \fbox{\includegraphics[width=0.95\textwidth]{#2}}
+    \caption{#1}
+  \end{figure}
+}
+
+\begin{document}
+
+% ==========================================================
+% Page de garde
+% ==========================================================
+\pagenumbering{gobble}
+
+\begin{titlepage}
+  \begin{tikzpicture}[remember picture, overlay]
+    \fill[ensiared] ([yshift=2cm]current page.south west) rectangle (current page.south east);
+    \fill[ensiared] ([yshift=2cm]current page.north west) rectangle (current page.north east);
+  \end{tikzpicture}
+
+  \centering
+  \vspace*{2cm}
+
+  % Logos
+  \includegraphics[width=0.35\textwidth]{img/sd logo.jpg}\hfill
+  \includegraphics[width=0.25\textwidth]{img/uca logo.png}\hfill
+
+  \vspace*{1.0cm}
+
+  {\color{white}\scshape\LARGE Base de données \& Systèmes décisionnels\par}
+  \vspace{0.4cm}
+  {\scshape\Large UNIVERSITÉ CLERMONT AUVERGNE — Campus Aurillac\par}
+
+  \vspace{1.2cm}
+  \hrule height 1pt
+  \vspace{0.5cm}
+  {\huge\bfseries Guide utilisateur\par}
+  \vspace{0.2cm}
+  {\Large Outil décisionnel — \textit{Ventes \& Logistique} (Power BI)\par}
+  \vspace{0.5cm}
+  \hrule height 1pt
+  \vspace{1.6cm}
+
+  \begin{minipage}[t]{0.5\textwidth}
+    \raggedright
+    {\Large\textbf{Réalisé par} :\par}
+    \vspace{0.2cm}
+    \begin{tabular}{l}
+      \ Ibrahima BODIAN \\
+    \end{tabular}
+  \end{minipage}%
+  \begin{minipage}[t]{0.5\textwidth}
+    \raggedleft
+    {\Large\textbf{Encadrant} :\par}
+    \vspace{0.2cm}
+    \textit{\ Bruno LAGARDE} \\
+  \end{minipage}
+
+  \vfill
+  {\large Date : \textit{\today}\par}
+\end{titlepage}
+
+% ==========================================================
+% Sommaire
+% ==========================================================
+\renewcommand{\contentsname}{Sommaire}
+\tableofcontents
+\newpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+% ==========================================================
+% 1) Objectif
+% ==========================================================
+\section{Objectif de l’outil}
+Ce rapport Power BI permet d’analyser :
+\begin{itemize}[leftmargin=*]
+  \item le chiffre d’affaires (CA), les quantités vendues, les remises et les frais de port ;
+  \item des vues de pilotage par produits/catégories, clients, zones (pays/ville) et transporteurs ;
+  \item la logistique (écarts date objectif vs date d’envoi, réapprovisionnement, quantités livrées par zone).
+\end{itemize}
+
+\begin{tipbox}
+\textbf{À retenir :} ce guide décrit \textbf{l’utilisation du rapport Power BI} (navigation, filtres, lecture des visuels, export).
+Les détails techniques (DW, scripts, contrôles SQL) sont traités dans la \textbf{Fiche technique}.
+\end{tipbox}
+
+% ==========================================================
+% 2) Navigation + F/L
+% ==========================================================
+\section{Navigation dans le rapport (pages et références F/L)}
+
+\subsection{Pages du rapport}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Page 1 — Synthèse Finance} : indicateurs clés et vue globale.
+  \item \textbf{Page 2 — Produits \& Catégories (F2, F6)}
+  \item \textbf{Page 3 — Clients \& Remises (F1, F5, F8)}
+  \item \textbf{Page 4 — Transport \& Coûts (F3, F4, F7)}
+  \item \textbf{Page 5 — Logistique (L1–L5)}
+\end{itemize}
+
+\subsection{Correspondance avec la consigne (Finance F)}
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{p{2cm} p{11.5cm}}
+\toprule
+\textbf{Réf.} & \textbf{Où la consulter dans Power BI} \\
+\midrule
+F1 & Page 3 : distribution des remises + détail par client/produit/employé \\
+F2 & Page 2 : CA par produit + lecture par catégorie \\
+F3 & Page 4 : CA par pays de livraison + comparaison avec frais de port \\
+F4 & Page 4 : CA / expéditions par transporteur \\
+F5 & Page 3 : commandes par employé + remise moyenne par client \\
+F6 & Page 2 : CA et quantités par fournisseur et produit \\
+F7 & Page 4 : port total + nombre d’expéditions par transporteur \\
+F8 & Page 3 : top clients / concentration du CA (rapport ajouté) \\
+\bottomrule
+\end{tabular}
+\caption{Correspondance Finance (F) et pages du rapport.}
+\end{table}
+
+\subsection{Correspondance avec la consigne (Logistique L)}
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{p{2cm} p{11.5cm}}
+\toprule
+\textbf{Réf.} & \textbf{Où la consulter dans Power BI (Page 5)} \\
+\midrule
+L1 & Table \textit{Plus grands écarts Date objectif vs Date envoi} (tri sur l’écart) \\
+L2 & Table \textit{Produits à réapprovisionner} (stock dispo vs niveau réap.) \\
+L3 & Visuel \textit{Quantités livrées par région et ville} \\
+L4 & (Si présent) liste liée aux commandes/produits/fournisseurs selon votre implémentation \\
+L5 & Indicateur/rapport utile au décideur logistique (ex. délai moyen, nb expéditions, etc.) \\
+\bottomrule
+\end{tabular}
+\caption{Correspondance Logistique (L) et visuels de la Page 5.}
+\end{table}
+
+% ==========================================================
+% 3) Filtres et sélections
+% ==========================================================
+\section{Filtres et sélections (slicers)}
+
+\subsection{Utiliser les segments (slicers)}
+\begin{itemize}[leftmargin=*]
+  \item Cliquez sur une valeur (ex. \textit{Pays livraison}, \textit{Semaine}) pour filtrer la page.
+  \item Pour sélectionner plusieurs valeurs : maintenez \textbf{Ctrl} pendant les clics.
+  \item Pour effacer rapidement une sélection : utilisez l’icône \textbf{gomme} du segment.
+\end{itemize}
+
+\subsection{Bon réflexe si ``tout semble vide''}
+\begin{itemize}[leftmargin=*]
+  \item Vérifiez si un segment est trop restrictif (pays, semaine, transporteur).
+  \item Effacez la sélection (gomme) pour revenir à la vue globale.
+\end{itemize}
+
+% ==========================================================
+% 4) Comprendre et explorer les graphiques
+% ==========================================================
+\section{Comprendre et explorer les graphiques}
+\subsection{Lecture du nuage de points \textit{Prix vs Quantité} (Page 2)}
+\begin{itemize}[leftmargin=*]
+  \item À droite : produits plus chers ; en haut : produits vendus en plus grande quantité ; bulles plus grosses : plus de CA.
+  \item Objectif : distinguer produits ``volume'' vs produits ``premium''.
+\end{itemize}
+
+\subsection{Lecture des tables logistiques (Page 5)}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Écart objectif/envoi} :
+  \begin{itemize}
+    \item écart \textbf{négatif} = envoi \textbf{avant} la date objectif (avance) ;
+    \item écart \textbf{positif} = envoi \textbf{après} la date objectif (retard).
+  \end{itemize}
+  \item \textbf{Réapprovisionnement} : un produit est à réapprovisionner lorsque \textit{stockDispo} est inférieur au \textit{niveau réap.}.
+\end{itemize}
+
+% ==========================================================
+% 5) Mode d’emploi page par page
+% ==========================================================
+\section{Mode d’emploi par page}
+
+\subsection*{Page 1 — Synthèse Finance}
+\begin{itemize}[leftmargin=*]
+  \item Objectif : obtenir une vue rapide (CA, commandes, quantités).
+\end{itemize}
+
+\subsection*{Page 2 — Produits \& Catégories (F2, F6)}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{F2} : identifier les produits/catégories qui contribuent le plus au CA.
+  \item \textbf{F6} : analyser la contribution des fournisseurs (matrix fournisseur $\rightarrow$ produit).
+\end{itemize}
+
+\subsection*{Page 3 — Clients \& Remises (F1, F5, F8)}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{F8} : repérer les clients les plus contributeurs (top clients).
+  \item \textbf{F1} : comprendre la distribution et l’impact des remises.
+  \item \textbf{F5} : comparer les commandes/indicateurs par employé et par client.
+\end{itemize}
+
+\subsection*{Page 4 — Transport \& Coûts (F3, F4, F7)}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{F3} : comparer les pays de livraison (CA/port).
+  \item \textbf{F4/F7} : comparer les transporteurs (activité, coûts, etc.).
+\end{itemize}
+
+\subsection*{Page 5 — Logistique (L1–L5)}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Slicers principaux} : \textit{Pays livraison} et \textit{Semaine}.
+  \item \textbf{KPI} : \textit{Nb expéditions} = nombre de commandes/expéditions sur le périmètre filtré.
+  \item \textbf{L1} : table des plus grands écarts (tri sur l’écart absolu).
+  \item \textbf{L2} : table des produits à réapprovisionner (stock dispo, seuil).
+  \item \textbf{L3} : quantités livrées par région et ville.
+  \item \textbf{L5} : indicateurs utiles (ex. volume d’expéditions / délais / écarts) pour orienter la décision.
+\end{itemize}
+
+% ==========================================================
+% 6) Exporter
+% ==========================================================
+\section{Exporter et partager}
+
+\subsection{Exporter le rapport en PDF (Power BI Desktop)}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Fichier} $\rightarrow$ \textbf{Exporter} $\rightarrow$ \textbf{Exporter au format PDF}.
+\end{itemize}
+
+
+% ==========================================================
+% Annexes
+% ==========================================================
+\newpage
+\appendix
+
+\section{Glossaire}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{CA net} : CA après remise.
+  \item \textbf{Remise} : réduction appliquée (ex. 0.05 = 5\%).
+  \item \textbf{Port} : frais de transport au niveau de la commande.
+  \item \textbf{Nb expéditions} : nombre de commandes/expéditions (grain commande).
+  \item \textbf{Stock dispo} : unités en stock moins unités en commande.
+  \item \textbf{Niveau réap.} : seuil à partir duquel un réapprovisionnement est recommandé.
+  \item \textbf{Écart objectif/envoi} : différence en jours entre date objectif et date d’envoi.
+\end{itemize}
+
+\section{FAQ (dépannage rapide)}
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Je ne vois plus de données} : vérifier les slicers, puis effacer la sélection (gomme).
+  \item \textbf{Je veux vérifier un chiffre} : exporter le visuel en CSV et contrôler les lignes filtrées.
+  \item \textbf{Trop d’informations sur une table} : appliquer un tri ou un filtre Top N (ex. Top 10).
+\end{itemize}
+
+\end{document}
